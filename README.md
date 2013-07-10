@@ -7,6 +7,7 @@ and dump a JSON structure to stdout.
 Elements are:
 * count: number of data catalogs
 * searchType: "views"
+* host: data portal hostname
 * timestamp: time at which pull occurred, integer seconds since epoch
 * results: array of catalog metadata, one entry per dataset
 

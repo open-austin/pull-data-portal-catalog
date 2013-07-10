@@ -77,6 +77,7 @@ while max_datasets.nil? || num_datasets < max_datasets
   if data.nil?
     data = a
     data['timestamp'] = Time.now.to_i
+    data['host'] = uri.host
     max_datasets = data['count'].to_i
     raise "failed to extract dataset 'count'" unless max_datasets > 0
   else
