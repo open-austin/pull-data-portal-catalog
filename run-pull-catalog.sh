@@ -28,21 +28,21 @@ fi
 cd $SAVE_DIR || exit 1
 
 if [ -f "$SAVE_FILE" ] ; then
-	echo "$0: will not overwrite destination: $SAVE_FILE" >&2
+	echo "$0: will not overwrite destination: $SAVE_DIR/$SAVE_FILE" >&2
 	exit 1
 fi
 
 $PULL_SCRIPT $HOST > $SAVE_TEMP
 if [ $? -ne 0 ] ; then
-	echo "$0: pull failed - output saved to: $SAVE_TEMP" >&2
+	echo "$0: pull failed - output saved to: $SAVE_DIR/$SAVE_TEMP" >&2
 	exit 1
 fi
 
 mv $SAVE_TEMP $SAVE_FILE
-echo "$0: catalog dumped to: $SAVE_FILE" >&2
+echo "$0: catalog dumped to: $SAVE_DIR/$SAVE_FILE" >&2
 
 $SUMMARIZE_SCRIPT $SAVE_FILE >$SUMMARY_FILE
-echo "$0: summary saved to: $SUMMARY_FILE" >&2
+echo "$0: summary saved to: $SAVE_DIR/$SUMMARY_FILE" >&2
 
 rm -f $SAVE_LATEST $SUMMARY_LATEST
 ln -s $SAVE_FILE $SAVE_LATEST
