@@ -35,7 +35,7 @@ var Age_Buckets = [
 var Chart_Type = "created";
 //var Chart_Type = "updated";
 
-var Group_By = {
+var Breakdown_By = {
   "created" : "date created",
   "updated" : "date last changed or updated",
 };
@@ -182,7 +182,7 @@ function process_catalog(data) {
   $('#host').text(data.host);
   $('#portal_url').attr("href", "https://" + data.host + "/");
   $('#timestamp').text(new Date(data.timestamp*1000));
-  $('#group_by').text(Group_By[Chart_Type]);
+  $('#breakdown_by').text(Breakdown_By[Chart_Type]);
 
 }
 
@@ -198,7 +198,7 @@ $(function() {
 
 <table style="solid black 1px; padding: 3px; background: #e8e8e8">
 <tr><th>Data portal:</th><td><a id="portal_url"><span id="host"></span></a></td></tr>
-<tr><th>Grouped by:</th><td id="group_by"></td></tr>
+<tr><th>Breakdown by:</th><td id="breakdown_by"></td></tr>
 <tr><th>As of:</th><td id="timestamp"></td></tr>
 </table>
 
