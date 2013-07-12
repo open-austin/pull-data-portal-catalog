@@ -3,6 +3,14 @@
 <script src="http://code.jquery.com/jquery-1.10.2.min.js"></script>
 <link rel="stylesheet" type="text/css" href="http://ajax.aspnetcdn.com/ajax/jquery.dataTables/1.9.4/css/jquery.dataTables.css">
 <script type="text/javascript" charset="utf8" src="http://ajax.aspnetcdn.com/ajax/jquery.dataTables/1.9.4/jquery.dataTables.min.js"></script>
+
+<style type="text/css">
+th.left, td.left {text-align: left;}
+th.center, td.center {text-align: center;}
+th.right, td.right {text-align: right;}
+body table.dataTable tfoot th {padding: 3px 10px; background: #f0f0f0;}
+</style>
+
 <script type="text/javascript">
 
 var DAYS = (24*60*60);
@@ -77,24 +85,35 @@ function process_catalog(data) {
     return categories[b]['all'].length - categories[a]['all'].length;
   });
 
+  var table_columns = new Array();
+  table_columns.push({"sTitle": "Department or Category", "sClass" : "center"});
+  Age_Buckets.forEach(function(bucket) {
+    table_columns.push({"sTitle": bucket.description, "sClass" : "right"});
+  });
+  table_columns.push({"sTitle": "Total Datasets", "sClass" : "right"});
+
   var table_data = new Array();
   sorted_category_names.forEach(function(c) {
     var cat = categories[c];
     var row = new Array();
     row.push(c);
-    cat.by_age.forEach(function(a) {
-      row.push(a.length);
-    });
+    for (var i = 0 ; i < cat.by_age.length ; ++i) {
+      var n = cat.by_age[i].length
+      row.push(n);
+    }
     row.push(cat.all.length);
     table_data.push(row);
   });
 
-  var table_columns = new Array();
-  table_columns.push({"sTitle": "Department or Category"});
-  Age_Buckets.forEach(function(bucket) {
-    table_columns.push({"sTitle": bucket.description});
-  });
-  table_columns.push({"sTitle": "Total Datasets"});
+  var column_totals = new Array(table_data[0].length);
+  for (var j = 0 ; j < column_totals.length ; ++j) {
+    column_totals[j] = 0;
+  }
+  for (var i = 0 ; i < table_data.length ; ++i) {
+    for (var j = 1 ; j < table_data[i].length ; ++j) {
+      column_totals[j] += table_data[i][j];
+    }
+  }
 
   $('#table').dataTable({
     'bPaginate': false,
@@ -102,6 +121,15 @@ function process_catalog(data) {
     "aoColumns": table_columns,
     "aaSorting": [[table_columns.length-1, 'desc']],
   });
+
+  var tr = $("<tr />");
+  tr.append($("<th />").text("TOTAL"));
+  for (var i = 1 ; i < column_totals.length ; ++i) {
+    tr.append($("<th />").addClass("right").text(column_totals[i]));
+  }
+  $("#table tfoot").html(tr);
+
+  $('#timestamp').text(new Date(data.timestamp*1000));
 
 }
 
@@ -112,8 +140,18 @@ $(function() {
 </head>
 <body>
 <div><a href="http://www.open-austin.org/"><img src="http://www.open-austin.org/wp-content/uploads/2013/04/Open_Austin_Banner_400x80.png" /></a></div>
-<h1>data.austintexas.gov Published Datasets</h1>
+<h1><a href="https://data.austintexas.gov">data.austintexas.gov</a> Published Datasets</h1>
+<p>as of <span id="timestamp"></span></p>
 <hr />
-<table id="table" />
+<div style="margin: 1em">
+<table id="table">
+<thead></thead>
+<tbody></tbody>
+<tfoot></tfoot>
+</table>
+</div>
+<br clear="both" />
+<hr />
+<p>[<a href="./">back</a>]</p>
 </body>
 </html>
