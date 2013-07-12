@@ -1,10 +1,19 @@
 <html>
 <head>
-<script src="http://code.jquery.com/jquery-1.10.2.min.js"></script>
+<link rel="stylesheet" type="text/css" href="http://yui.yahooapis.com/3.10.3/build/cssreset/cssreset-min.css">
 <link rel="stylesheet" type="text/css" href="http://ajax.aspnetcdn.com/ajax/jquery.dataTables/1.9.4/css/jquery.dataTables.css">
+<script src="http://code.jquery.com/jquery-1.10.2.min.js"></script>
 <script type="text/javascript" charset="utf8" src="http://ajax.aspnetcdn.com/ajax/jquery.dataTables/1.9.4/jquery.dataTables.min.js"></script>
 
 <style type="text/css">
+body {
+  font: 14px/16px sans-serif;
+  margin: 1em;
+}
+p {margin: 0.5em 0;}
+h1 {font-size: 250%; margin: 1em 0;}
+td, th {padding: 5px;}
+th {font-weight: bold;}
 th.left, td.left {text-align: left;}
 th.center, td.center {text-align: center;}
 th.right, td.right {text-align: right;}
@@ -26,6 +35,11 @@ var Age_Buckets = [
 var Chart_Type = "created";
 //var Chart_Type = "updated";
 
+var Group_By = {
+  "created" : "date created",
+  "updated" : "date last changed or updated",
+};
+
 function age_bucket_id(age) {
   for (var i = 0 ; i < Age_Buckets.length ; ++i) {
     if (age <= Age_Buckets[i].age || Age_Buckets[i].age == 0) {
@@ -33,6 +47,52 @@ function age_bucket_id(age) {
     }
   }
   throw new Error("age_bucket_id() failed for age: " + age);
+}
+
+
+/*
+ * The City of Austin has a "Department" field in some datasets
+ * that we will prefer for categorizing the dataset. I don't know
+ * if that's a general Socrata practice, or just something Austin
+ * does.
+ */
+var Category_Fields = [
+
+  /*
+   * This is how "Department" appears in the "summary" dataset, as
+   * produced by "summarize-catalog.rb".
+   */
+  ['customFields', 'Additional Information', 'Department'],
+
+  /*
+   * This is how "Department" appears in the "catalog" dataset, as pulled
+   * from Socrata.
+   */
+  ['view', 'metadata', 'custom_fields', 'Additional Information', 'Department'],
+
+  /*
+   * If there isn't a "Department" defined, then we'll fall back
+   * to "category" which is part of the standard metadata schema.
+   */
+  ['category'],
+];
+
+
+function categorize_dataset(dataset) {
+
+  for (var i = 0 ; i < Category_Fields.length ; ++i) {
+    var fields = Category_Fields[i];
+    var a = dataset;
+    for (j = 0 ; a !== undefined && j < fields.length ; ++j) {
+      a = a[fields[j]];
+    }
+    if (a !== undefined) {
+      return a;
+    }
+  }
+
+  //console.log(dataset);
+  return "Undefined";
 }
 
 function process_catalog(data) {
@@ -52,17 +112,7 @@ function process_catalog(data) {
       throw new Error("bad value chart type \"" + Chart_Type + "\"");
     }
 
-    // determine where to categorize this dataset
-    var c = dataset.category;
-    if (dataset['customFields']
-      && dataset['customFields']['Additional Information']
-      && dataset['customFields']['Additional Information']['Department']) {
-      c = dataset['customFields']['Additional Information']['Department'];
-    }
-    if (c === undefined) {
-      //console.log(dataset);
-      c = "Undefined";
-    }
+    var c = categorize_dataset(dataset);
 
     // initialize a categories[] entry if this is a new category
     if (categories[c] === undefined) {
@@ -129,7 +179,10 @@ function process_catalog(data) {
   }
   $("#table tfoot").html(tr);
 
+  $('#host').text(data.host);
+  $('#portal_url').attr("href", "https://" + data.host + "/");
   $('#timestamp').text(new Date(data.timestamp*1000));
+  $('#group_by').text(Group_By[Chart_Type]);
 
 }
 
@@ -139,9 +192,16 @@ $(function() {
 </script>
 </head>
 <body>
-<div><a href="http://www.open-austin.org/"><img src="http://www.open-austin.org/wp-content/uploads/2013/04/Open_Austin_Banner_400x80.png" /></a></div>
-<h1><a href="https://data.austintexas.gov">data.austintexas.gov</a> Published Datasets</h1>
-<p>as of <span id="timestamp"></span></p>
+<div style="float: right"><a href="http://www.open-austin.org/"><img src="http://www.open-austin.org/wp-content/uploads/2013/04/Open_Austin_Banner_400x80.png" /></a></div>
+
+<h1>Open Gov Datasets by Department/Category</h1>
+
+<table style="solid black 1px; padding: 3px; background: #e8e8e8">
+<tr><th>Data portal:</th><td><a id="portal_url"><span id="host"></span></a></td></tr>
+<tr><th>Grouped by:</th><td id="group_by"></td></tr>
+<tr><th>As of:</th><td id="timestamp"></td></tr>
+</table>
+
 <hr />
 <div style="margin: 1em">
 <table id="table">
@@ -153,5 +213,6 @@ $(function() {
 <br clear="both" />
 <hr />
 <p>[<a href="./">back</a>]</p>
+<p>This tool is open source: <a href="https://github.com/chip-rosenthal/pull-data-portal-catalog">https://github.com/chip-rosenthal/pull-data-portal-catalog</a>
 </body>
 </html>
