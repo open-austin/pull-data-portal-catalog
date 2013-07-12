@@ -1,0 +1,119 @@
+<html>
+<head>
+<script src="http://code.jquery.com/jquery-1.10.2.min.js"></script>
+<link rel="stylesheet" type="text/css" href="http://ajax.aspnetcdn.com/ajax/jquery.dataTables/1.9.4/css/jquery.dataTables.css">
+<script type="text/javascript" charset="utf8" src="http://ajax.aspnetcdn.com/ajax/jquery.dataTables/1.9.4/jquery.dataTables.min.js"></script>
+<script type="text/javascript">
+
+var DAYS = (24*60*60);
+var NOW = Math.floor((new Date()).getTime() / 1000);
+
+var Age_Buckets = [
+  {'age': 31*DAYS,	'description': '0-30 days'},
+  {'age': 91*DAYS,	'description': '31-90 days'},
+  {'age': 366*DAYS,	'description': '91-365 days'},
+  {'age': 0,		'description': '>365 days'},
+];
+
+var Chart_Type = "created";
+//var Chart_Type = "updated";
+
+function age_bucket_id(age) {
+  for (var i = 0 ; i < Age_Buckets.length ; ++i) {
+    if (age <= Age_Buckets[i].age || Age_Buckets[i].age == 0) {
+      return i;
+    }
+  }
+  throw new Error("age_bucket_id() failed for age: " + age);
+}
+
+function process_catalog(data) {
+
+  var categories = {};
+
+  data.datasets.forEach(function(dataset) {
+
+    switch (Chart_Type) {
+    case 'created':
+      dataset.age = NOW - dataset.createdAt;
+      break;
+    case 'updated':
+      dataset.age = NOW - Math.max(dataset.rowsUpdatedAt, dataset.viewLastModified);
+      break;
+    default:
+      throw new Error("bad value chart type \"" + Chart_Type + "\"");
+    }
+
+    // determine where to categorize this dataset
+    var c = dataset.category;
+    if (dataset['customFields']
+      && dataset['customFields']['Additional Information']
+      && dataset['customFields']['Additional Information']['Department']) {
+      c = dataset['customFields']['Additional Information']['Department'];
+    }
+    if (c === undefined) {
+      //console.log(dataset);
+      c = "Undefined";
+    }
+
+    // initialize a categories[] entry if this is a new category
+    if (categories[c] === undefined) {
+      categories[c] = {
+        'all': new Array(),
+	'by_age': new Array(Age_Buckets.length),
+      };
+      for (var i = 0 ; i < Age_Buckets.length ; ++i) {
+        categories[c]['by_age'][i] = new Array();
+      }
+    }
+
+    // record this dataset in the category
+    categories[c]['all'].push(dataset);
+    categories[c]['by_age'][age_bucket_id(dataset.age)].push(dataset);
+
+  });
+
+  var sorted_category_names = Object.keys(categories).sort(function(a, b) {
+    return categories[b]['all'].length - categories[a]['all'].length;
+  });
+
+  var table_data = new Array();
+  sorted_category_names.forEach(function(c) {
+    var cat = categories[c];
+    var row = new Array();
+    row.push(c);
+    cat.by_age.forEach(function(a) {
+      row.push(a.length);
+    });
+    row.push(cat.all.length);
+    table_data.push(row);
+  });
+
+  var table_columns = new Array();
+  table_columns.push({"sTitle": "Department or Category"});
+  Age_Buckets.forEach(function(bucket) {
+    table_columns.push({"sTitle": bucket.description});
+  });
+  table_columns.push({"sTitle": "Total Datasets"});
+
+  $('#table').dataTable({
+    'bPaginate': false,
+    "aaData": table_data,
+    "aoColumns": table_columns,
+    "aaSorting": [[table_columns.length-1, 'desc']],
+  });
+
+}
+
+$(function() {
+  $.getJSON("../summary-data_austintexas_gov-LATEST.json", process_catalog);
+});
+</script>
+</head>
+<body>
+<div><a href="http://www.open-austin.org/"><img src="http://www.open-austin.org/wp-content/uploads/2013/04/Open_Austin_Banner_400x80.png" /></a></div>
+<h1>data.austintexas.gov Published Datasets</h1>
+<hr />
+<table id="table" />
+</body>
+</html>
