@@ -36,7 +36,7 @@ data['results'].each do |dataset|
   # the dataset row count.
   #
   a['rowCount'] = a['columns'].map do |b|
-    b.has_key?('cachedContents') ? b['cachedContents']['non_null'] : nil
+    b.has_key?('cachedContents') ? b['cachedContents']['non_null'] : 0
   end.max
 
   #
