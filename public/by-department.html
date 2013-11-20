@@ -1,0 +1,60 @@
+<html>
+<head>
+
+<title>Open Gov Datasets by Department/Category</title>
+
+<link rel="stylesheet" type="text/css" href="http://yui.yahooapis.com/3.10.3/build/cssreset/cssreset-min.css">
+<link rel="stylesheet" type="text/css" href="http://ajax.aspnetcdn.com/ajax/jquery.dataTables/1.9.4/css/jquery.dataTables.css">
+<style type="text/css">
+  body {
+    font: 14px/16px sans-serif;
+    margin: 1em;
+  }
+  p {margin: 0.5em 0;}
+  h1 {font-size: 32px; line-height: 34px; font-weight: bold; margin: 1em 0;}
+  td, th {padding: 5px;}
+  th {font-weight: bold;}
+  th.left, td.left {text-align: left;}
+  th.center, td.center {text-align: center;}
+  th.right, td.right {text-align: right;}
+  body table.dataTable tfoot th {padding: 3px 10px; background: #f0f0f0;}
+</style>
+
+<script type="text/javascript" src="http://code.jquery.com/jquery-1.10.2.min.js"></script>
+<script type="text/javascript" src="http://ajax.aspnetcdn.com/ajax/jquery.dataTables/1.9.4/jquery.dataTables.min.js"></script>
+<script type="text/javascript" src="by-department.js"></script>
+<script type="text/javascript">
+  $(function() {
+    start(summarize_by_department);
+  });
+</script>
+
+</head>
+<body>
+
+<div style="float: right"><a href="http://www.open-austin.org/"><img src="http://www.open-austin.org/wp-content/uploads/2013/04/Open_Austin_Banner_400x80.png" style="height: 80px; width: 400px" /></a></div>
+
+<h1>Open Gov Datasets by Department/Category</h1>
+
+<table style="solid black 1px; padding: 3px; background: #e8e8e8">
+  <tr><th>Data portal:</th><td><a id="portal_url"><span id="host"></span></a></td></tr>
+  <tr><th>Breakdown by:</th><td id="breakdown_by"></td></tr>
+  <tr><th>As of:</th><td id="timestamp"></td></tr>
+</table>
+
+<hr />
+<div style="margin: 1em">
+  <table id="table">
+    <thead></thead>
+    <tbody></tbody>
+    <tfoot></tfoot>
+  </table>
+</div>
+
+<br clear="both" />
+<hr />
+<p>[<a href="./">back</a>]</p>
+<p>This tool is open source: <a href="https://github.com/chip-rosenthal/pull-data-portal-catalog">https://github.com/chip-rosenthal/pull-data-portal-catalog</a>
+
+</body>
+</html>
