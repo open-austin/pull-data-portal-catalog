@@ -21,9 +21,6 @@ datasets = []
 data['results'].each do |dataset|
   a = dataset['view']
 
-puts "===========\n"
-require "pp" ; pp a
-
   #
   # The "metadata" object is mostly boring, but the City of Austin
   # uses the "custom_fields" to indicate things such as
