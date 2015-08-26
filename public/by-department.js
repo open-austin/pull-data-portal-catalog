@@ -60,10 +60,11 @@ function categorize_dataset(dataset) {
   for (var i = 0 ; i < Category_Fields.length ; ++i) {
     var fields = Category_Fields[i];
     var a = dataset;
-    for (j = 0 ; a !== undefined && j < fields.length ; ++j) {
+    for (j = 0 ; a != null && j < fields.length ; ++j) {
+        console.log(a);
       a = a[fields[j]];
     }
-    if (a !== undefined) {
+    if (a != null) {
       return a;
     }
   }
@@ -93,7 +94,7 @@ function summarize_by_department(data) {
     var c = categorize_dataset(dataset);
 
     // initialize a categories[] entry if this is a new category
-    if (categories[c] === undefined) {
+    if (categories[c] == null) {
       categories[c] = {
         'all': new Array(),
 	'by_age': new Array(Age_Buckets.length),
