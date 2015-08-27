@@ -1,17 +1,20 @@
 #!/bin/sh
 
 : ${HOST:="data.austintexas.gov"}
-: ${SAVE_DIR:="/srv/www/data.open-austin.org/html/data-catalogs"}
+: ${SAVE_DIR:="/srv/www/data.open-austin.org/html/data-catalogs/data"}
 
 PULL_SCRIPT="pull-catalog.rb"
 SUMMARIZE_SCRIPT="summarize-catalog.rb"
 
 DATESTAMP=`date +'%Y%m%d'`
+MONTHSTAMP=`date +'%Y%m'`
 HOSTMUNGED=`echo "$HOST" | sed -e 's/\./_/g'`
-SAVE_FILE="catalog-${HOSTMUNGED}-${DATESTAMP}.json"
+ID_FULL="catalog-full"
+ID_REDUCED="catalog-reduced"
+
+SAVE_FILE="${MONTHSTAMP}/catalog-${HOSTMUNGED}-${DATESTAMP}.json"
 SAVE_LATEST="catalog-${HOSTMUNGED}-LATEST.json"
-SAVE_TEMP="$SAVE_FILE.$$"
-SUMMARY_FILE="summary-${HOSTMUNGED}-${DATESTAMP}.json"
+SUMMARY_FILE="${MONTHSTAMP}/summary-${HOSTMUNGED}-${DATESTAMP}.json"
 SUMMARY_LATEST="summary-${HOSTMUNGED}-LATEST.json"
 
 d=`dirname $0`
@@ -26,13 +29,20 @@ if [ ! -d "$SAVE_DIR" ] ; then
 	exit 1
 fi
 cd $SAVE_DIR || exit 1
+if [ ! -d "$MONTHSTAMP" ] ; then
+        mkdir -p "$MONTHSTAMP"
+fi
 
 if [ -f "$SAVE_FILE" ] ; then
 	echo "$0: will not overwrite destination: $SAVE_DIR/$SAVE_FILE" >&2
 	exit 1
 fi
 
-$PULL_SCRIPT $HOST > $SAVE_TEMP
+#
+# Pull the metadata from the data portal and save all the contents.
+#
+SAVE_TEMP="$SAVE_FILE.$$"
+$PULL_SCRIPT $HOST >$SAVE_TEMP
 if [ $? -ne 0 ] ; then
 	echo "$0: pull failed - output saved to: $SAVE_DIR/$SAVE_TEMP" >&2
 	exit 1
@@ -40,12 +50,22 @@ fi
 
 mv $SAVE_TEMP $SAVE_FILE
 echo "$0: catalog dumped to: $SAVE_DIR/$SAVE_FILE" >&2
-
-$SUMMARIZE_SCRIPT $SAVE_FILE >$SUMMARY_FILE
-echo "$0: summary saved to: $SAVE_DIR/$SUMMARY_FILE" >&2
-
-rm -f $SAVE_LATEST $SUMMARY_LATEST
+rm -f $SAVE_LATEST
 ln -s $SAVE_FILE $SAVE_LATEST
+
+#
+# Process the full metadata dump to a reduced (more usable) set.
+#
+SUMMARY_TEMP="$SUMMARY_FILE.$$"
+$SUMMARIZE_SCRIPT $SAVE_FILE >$SUMMARY_TEMP
+if [ $? -ne 0 ] ; then
+	echo "$0: summary failed - output saved to: $SAVE_DIR/$SUMMARY_TEMP" >&2
+	exit 1
+fi
+
+mv $SUMMARY_TEMP $SUMMARY_FILE
+echo "$0: summary saved to: $SAVE_DIR/$SUMMARY_FILE" >&2
+rm -f $SUMMARY_LATEST
 ln -s $SUMMARY_FILE $SUMMARY_LATEST
 
 exit 0
