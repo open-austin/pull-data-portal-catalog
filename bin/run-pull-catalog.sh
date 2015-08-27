@@ -50,8 +50,6 @@ fi
 
 mv $SAVE_TEMP $SAVE_FILE
 echo "$0: catalog dumped to: $SAVE_DIR/$SAVE_FILE" >&2
-rm -f $SAVE_LATEST
-ln -s $SAVE_FILE $SAVE_LATEST
 
 #
 # Process the full metadata dump to a reduced (more usable) set.
@@ -65,6 +63,10 @@ fi
 
 mv $SUMMARY_TEMP $SUMMARY_FILE
 echo "$0: summary saved to: $SAVE_DIR/$SUMMARY_FILE" >&2
+
+gzip -v $SAVE_FILE
+rm -f $SAVE_LATEST.gz
+ln -s $SAVE_FILE.gz $SAVE_LATEST.gz
 rm -f $SUMMARY_LATEST
 ln -s $SUMMARY_FILE $SUMMARY_LATEST
 
