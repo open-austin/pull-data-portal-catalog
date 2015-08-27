@@ -1,20 +1,20 @@
 #!/bin/sh
 
 : ${HOST:="data.austintexas.gov"}
-: ${SAVE_DIR:="/srv/www/data.open-austin.org/html/data-catalogs/data"}
+: ${SAVE_DIR:="/srv/www/data.open-austin.org/html/data-catalogs"}
 
 PULL_SCRIPT="pull-catalog.rb"
 SUMMARIZE_SCRIPT="summarize-catalog.rb"
 
 DATESTAMP=`date +'%Y%m%d'`
-MONTHSTAMP=`date +'%Y%m'`
+SAVE_SUBDIR="data/`date +'%Y%m'`"
 HOSTMUNGED=`echo "$HOST" | sed -e 's/\./_/g'`
 ID_FULL="catalog-full"
 ID_REDUCED="catalog-reduced"
 
-SAVE_FILE="${MONTHSTAMP}/catalog-${HOSTMUNGED}-${DATESTAMP}.json"
+SAVE_FILE="${SAVE_SUBDIR}/catalog-${HOSTMUNGED}-${DATESTAMP}.json"
 SAVE_LATEST="catalog-${HOSTMUNGED}-LATEST.json"
-SUMMARY_FILE="${MONTHSTAMP}/summary-${HOSTMUNGED}-${DATESTAMP}.json"
+SUMMARY_FILE="${SAVE_SUBDIR}/summary-${HOSTMUNGED}-${DATESTAMP}.json"
 SUMMARY_LATEST="summary-${HOSTMUNGED}-LATEST.json"
 
 d=`dirname $0`
@@ -29,14 +29,16 @@ if [ ! -d "$SAVE_DIR" ] ; then
 	exit 1
 fi
 cd $SAVE_DIR || exit 1
-if [ ! -d "$MONTHSTAMP" ] ; then
-        mkdir -p "$MONTHSTAMP"
+if [ ! -d "$SAVE_SUBDIR" ] ; then
+        mkdir -p "$SAVE_SUBDIR"
 fi
 
-if [ -f "$SAVE_FILE" ] ; then
-	echo "$0: will not overwrite destination: $SAVE_DIR/$SAVE_FILE" >&2
-	exit 1
-fi
+for file in $SAVE_FILE $SAVE_FILE.gz ; do
+	if [ -f $file ] ; then
+		echo "$0: will not overwrite destination: $SAVE_DIR/$file" >&2
+		exit 1
+	fi
+done
 
 #
 # Pull the metadata from the data portal and save all the contents.
