@@ -21,7 +21,7 @@ oparser = OptionParser.new do |opts|
   opts.separator "Options:"
 
   opts.on("-q", "--quiet", "Suppress info messages") do |flag|
-    $log.level = (flag ? Logger::NOTICE : Logger::INFO)
+    $log.level = (flag ? Logger::WARN : Logger::INFO)
   end
 
   opts.on("-h", "--help", "Show this message") do

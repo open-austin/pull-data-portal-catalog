@@ -1,5 +1,7 @@
 #!/bin/sh
 
+USAGE="usage: $0 [-q] [-H HOST] [-S SAVEDIR]"
+
 : ${HOST:="data.austintexas.gov"}
 : ${SAVE_DIR:="/srv/www/data.open-austin.org/html/data-catalogs"}
 
@@ -17,12 +19,36 @@ SAVE_LATEST="catalog-${HOSTMUNGED}-LATEST.json"
 SUMMARY_FILE="${SAVE_SUBDIR}/summary-${HOSTMUNGED}-${DATESTAMP}.json"
 SUMMARY_LATEST="summary-${HOSTMUNGED}-LATEST.json"
 
+quiet=false
+
+while getopts "H:S:q" arg ; do
+	case $arg in
+	H) HOST=$OPTARG ;;
+	S) SAVE_DIR=$OPTARG ;;
+	q) quiet=true ;;
+	*) echo "$USAGE" >&2 ; exit 1 ;;
+	esac
+done
+shift `expr $OPTIND - 1`
+if [ $# -ne 0 ] ; then
+	echo "$USAGE" >&2
+	exit 1
+fi
+
 d=`dirname $0`
 if [ "X$d" = "X." ] ; then
 	d=`pwd`
 fi
 PATH="$d:$PATH"
 export PATH
+
+if $quiet ; then
+	qflag='-q'
+	vflag=
+else
+	qflag=
+	vflag='-v'
+fi
 
 if [ ! -d "$SAVE_DIR" ] ; then
 	echo "$0: destination directory does not exist: $SAVE_DIR" >&2
@@ -44,14 +70,14 @@ done
 # Pull the metadata from the data portal and save all the contents.
 #
 SAVE_TEMP="$SAVE_FILE.$$"
-$PULL_SCRIPT $HOST >$SAVE_TEMP
+$PULL_SCRIPT $qflag $HOST >$SAVE_TEMP
 if [ $? -ne 0 ] ; then
 	echo "$0: pull failed - output saved to: $SAVE_DIR/$SAVE_TEMP" >&2
 	exit 1
 fi
 
 mv $SAVE_TEMP $SAVE_FILE
-echo "$0: catalog dumped to: $SAVE_DIR/$SAVE_FILE" >&2
+$quiet || echo "$0: catalog dumped to: $SAVE_DIR/$SAVE_FILE" >&2
 
 #
 # Process the full metadata dump to a reduced (more usable) set.
@@ -64,13 +90,12 @@ if [ $? -ne 0 ] ; then
 fi
 
 mv $SUMMARY_TEMP $SUMMARY_FILE
-echo "$0: summary saved to: $SAVE_DIR/$SUMMARY_FILE" >&2
+$quiet || echo "$0: summary saved to: $SAVE_DIR/$SUMMARY_FILE" >&2
 
-gzip -v $SAVE_FILE
+gzip $vflag $SAVE_FILE
 rm -f $SAVE_LATEST.gz
 ln -s $SAVE_FILE.gz $SAVE_LATEST.gz
 rm -f $SUMMARY_LATEST
 ln -s $SUMMARY_FILE $SUMMARY_LATEST
 
 exit 0
-
